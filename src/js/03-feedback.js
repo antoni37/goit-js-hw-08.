@@ -1,53 +1,43 @@
-import throttle from 'lodash.throttle';
+// import throttle from 'lodash.throttle';
 
-const emailInput = document.querySelector("[name='email']");
-const messageInput = document.querySelector("[name='message']");
-const form = document.querySelector('.feedback-form');
+const form = document.querySelector('form');
+const input = document.querySelector('input');
+const textarea = document.querySelector('textarea');
 
-function saveInput() {
-  const email = emailInput.value.trim();
-  const message = messageInput.value.trim();
-  const data = {
-    email,
-    message,
-  };
+form.addEventListener('submit', onFormSumbit);
+form.addEventListener('input', throttle(onInput, 500));
 
-  try {
-    const stringedData = JSON.stringify(data);
-    localStorage.setItem('feedback-form-state', stringedData);
-  } catch (error) {
-    console.log('stringedData error: ' + error);
-  }
-}
+const STORAGE_KEY = 'feedback-form-state';
+let formData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-const throttleSave = throttle(saveInput, 500);
+getLocalStorageItems();
 
-emailInput.addEventListener('input', throttleSave);
-messageInput.addEventListener('input', throttleSave);
-form.addEventListener('submit', onSubmit);
+function onFormSumbit(e) {
+  e.preventDefault();
 
-function onSubmit(event) {
-  event.preventDefault();
-  const sentData = {
-    email: emailInput.value.trim(),
-    message: messageInput.value.trim(),
-  };
-  if (sentData.email === '' || sentData.message === '') {
-    alert('Both fields must be filled before sending');
+  if (e.target.elements.email.value && e.target.elements.message.value) {
+    // consoleFormData(e.currentTarget);
+    console.log(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+
+    e.currentTarget.reset();
+    localStorage.removeItem(STORAGE_KEY);
+    formData = {};
   } else {
-    console.log(sentData);
-    localStorage.removeItem('feedback-form-state');
-    emailInput.value = null;
-    messageInput.value = null;
+    alert('заповни всі поля форми!');
   }
 }
 
-try {
-  const parsedData = JSON.parse(localStorage.getItem('feedback-form-state'));
-  if (parsedData.email !== '' || parsedData.message !== '') {
-    emailInput.value = parsedData.email;
-    messageInput.value = parsedData.message;
+function onInput(e) {
+  formData[e.target.name] = e.target.value;
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+}
+
+function getLocalStorageItems() {
+  const storageItem = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+  if (storageItem) {
+    input.value = storageItem.email || '';
+    textarea.value = storageItem.message || '';
   }
-} catch (error) {
-  console.log('parsedData error: ' + error);
 }
